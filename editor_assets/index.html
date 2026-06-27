@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art Portrait Mask Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f111a;
+            --bg-card: #161925;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #2d3142;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 70px);
+            overflow: hidden;
+        }
+
+        sidebar {
+            width: 320px;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+            background: radial-gradient(circle at center, #1b1e2e 0%, #0f111a 100%);
+        }
+
+        .card {
+            background-color: rgba(22, 25, 37, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            outline: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .select-wrapper select:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-green {
+            background-color: var(--accent-green);
+        }
+        .btn-green:hover {
+            background-color: #059669;
+        }
+
+        .btn-red {
+            background-color: var(--accent-red);
+        }
+        .btn-red:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.6rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-dark);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active-opaque {
+            background-color: rgba(16, 185, 129, 0.15);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .mode-btn.active-transparent {
+            background-color: rgba(239, 68, 68, 0.15);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .seeds-list {
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .seed-item {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .seed-badge {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .seed-badge.opaque {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        .seed-badge.transparent {
+            background-color: var(--accent-red);
+            box-shadow: 0 0 8px var(--accent-red);
+        }
+
+        .remove-seed {
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .remove-seed:hover {
+            color: var(--accent-red);
+        }
+
+        .workspace-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .editor-pane {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-height: 0;
+        }
+
+        .pane-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .canvas-container {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background-color: #0b0c13;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: crosshair;
+            min-height: 0;
+        }
+
+        .canvas-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .canvas-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Chessboard background for transparency preview */
+        .transparent-bg {
+            background-image: linear-gradient(45deg, #181b29 25%, transparent 25%),
+                              linear-gradient(-45deg, #181b29 25%, transparent 25%),
+                              linear-gradient(45deg, transparent 75%, #181b29 75%),
+                              linear-gradient(-45deg, transparent 75%, #181b29 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: #0d0f17;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(15, 17, 26, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--accent-red);
+            color: #fca5a5;
+        }
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--accent-green);
+            color: #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Pixel Art Portrait Mask Editor</h1>
+        <div style="display: flex; gap: 1rem;">
+            <button id="btn-preview" class="btn btn-primary">Update Preview</button>
+            <button id="btn-save" class="btn btn-green">Apply & Save (Run ComfyUI)</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <sidebar>
+            <div class="card">
+                <div class="card-title">Select Portrait</div>
+                <div class="select-wrapper">
+                    <select id="select-portrait">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Editing Mode</div>
+                <div class="mode-selector">
+                    <button id="mode-opaque" class="mode-btn active-opaque">Opaque (Left Click)</button>
+                    <button id="mode-trans" class="mode-btn">Transparent (Right Click)</button>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    <strong>Opaque:</strong> Forces the clicked area to be solid character foreground.<br>
+                    <strong>Transparent:</strong> Forces the clicked area to be background transparent.
+                </p>
+            </div>
+
+            <div class="card" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <div class="card-title">
+                    <span>Seed Points</span>
+                    <button id="btn-clear-seeds" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Clear All</button>
+                </div>
+                <div id="seeds-list" class="seeds-list">
+                    <!-- Seed items will appear here -->
+                </div>
+            </div>
+        </sidebar>
+
+        <main>
+            <div class="workspace-split">
+                <div class="editor-pane">
+                    <div class="pane-title">Original with Mask (Click to add seeds)</div>
+                    <div id="original-container" class="canvas-container transparent-bg">
+                        <img id="img-original" src="" alt="Original">
+                        <canvas id="canvas-overlay"></canvas>
+                    </div>
+                </div>
+                
+                <div class="editor-pane">
+                    <div class="pane-title">Live Preview (Pixelated Transparency)</div>
+                    <div class="canvas-container transparent-bg">
+                        <img id="img-preview" src="" alt="Preview">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="alert-error" class="alert alert-error"></div>
+            <div id="alert-success" class="alert alert-success"></div>
+        </main>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text" style="font-weight: 600; font-size: 1.1rem;">Processing preview...</div>
+    </div>
+
+    <script>
+        let currentPortrait = "";
+        let seeds = []; // Array of {x, y, type: 'opaque' | 'transparent'}
+        let currentMode = "opaque"; // 'opaque' | 'transparent'
+        
+        let originalImgWidth = 1;
+        let originalImgHeight = 1;
+
+        const selectPortrait = document.getElementById("select-portrait");
+        const imgOriginal = document.getElementById("img-original");
+        const imgPreview = document.getElementById("img-preview");
+        const canvasOverlay = document.getElementById("canvas-overlay");
+        const ctxOverlay = canvasOverlay.getContext("2d");
+        
+        const modeOpaque = document.getElementById("mode-opaque");
+        const modeTrans = document.getElementById("mode-trans");
+        const seedsList = document.getElementById("seeds-list");
+        const btnClearSeeds = document.getElementById("btn-clear-seeds");
+        const btnSave = document.getElementById("btn-save");
+        const btnPreview = document.getElementById("btn-preview");
+        
+        const loading = document.getElementById("loading");
+        const loadingText = document.getElementById("loading-text");
+        const alertError = document.getElementById("alert-error");
+        const alertSuccess = document.getElementById("alert-success");
+
+        // Set up initial state
+        window.addEventListener("load", fetchPortraits);
+        window.addEventListener("resize", resizeCanvas);
+
+        selectPortrait.addEventListener("change", (e) => {
+            if (e.target.value) {
+                loadPortrait(e.target.value);
+            }
+        });
+
+        modeOpaque.addEventListener("click", () => setMode("opaque"));
+        modeTrans.addEventListener("click", () => setMode("transparent"));
+        btnClearSeeds.addEventListener("click", clearAllSeeds);
+        btnSave.addEventListener("click", saveAndApply);
+        btnPreview.addEventListener("click", processPreview);
+
+        // Handle clicks on original canvas container
+        const origContainer = document.getElementById("original-container");
+        origContainer.addEventListener("click", (e) => {
+            handleCanvasClick(e, "opaque");
+        });
+        
+        origContainer.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            handleCanvasClick(e, "transparent");
+        });
+
+        function showLoading(text) {
+            loadingText.textContent = text;
+            loading.classList.add("active");
+        }
+
+        function hideLoading() {
+            loading.classList.remove("active");
+        }
+
+        function showError(text) {
+            alertError.textContent = text;
+            alertError.style.display = "block";
+            alertSuccess.style.display = "none";
+            setTimeout(() => { alertError.style.display = "none"; }, 5000);
+        }
+
+        function showSuccess(text) {
+            alertSuccess.textContent = text;
+            alertSuccess.style.display = "block";
+            alertError.style.display = "none";
+            setTimeout(() => { alertSuccess.style.display = "none"; }, 5000);
+        }
+
+        async function fetchPortraits() {
+            try {
+                const res = await fetch("/api/list");
+                const list = await res.json();
+                selectPortrait.innerHTML = '<option value="">-- Select Character --</option>';
+                list.forEach(name => {
+                    const opt = document.createElement("option");
+                    opt.value = name;
+                    opt.textContent = name;
+                    selectPortrait.appendChild(opt);
+                });
+            } catch (err) {
+                showError("Failed to fetch portraits list.");
+            }
+        }
+
+        async function loadPortrait(name) {
+            currentPortrait = name;
+            seeds = [];
+            renderSeeds();
+            showLoading("Loading portrait images...");
+            
+            try {
+                // Fetch the initial processed transparent preview and base images
+                const res = await fetch("/api/process", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: name, seeds: [] })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    imgOriginal.src = `data:image/png;base64,${data.highres_b64}`;
+                    imgPreview.src = `data:image/png;base64,${data.image_b64}`;
+                    
+                    imgOriginal.onload = () => {
+                        originalImgWidth = imgOriginal.naturalWidth;
+                        originalImgHeight = imgOriginal.naturalHeight;
+                        resizeCanvas();
+                        hideLoading();
+                    };
+                } else {
+                    hideLoading();
+                    showError(data.error || "Failed to load portrait.");
+                }
+            } catch (err) {
+                hideLoading();
+                showError("Failed to load portrait.");
+            }
+        }
+
+        function resizeCanvas() {
+            if (!imgOriginal.src || originalImgWidth === 1) return;
+            
+            // Match canvas overlay size to the displayed size of the original image
+            const rect = imgOriginal.getBoundingClientRect();
+            canvasOverlay.width = rect.width;
+            canvasOverlay.height = rect.height;
+            canvasOverlay.style.left = `${imgOriginal.offsetLeft}px`;
+            canvasOverlay.style.top = `${imgOriginal.offsetTop}px`;
+            
+            drawSeeds();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            if (mode === "opaque") {
+                modeOpaque.classList.add("active-opaque");
+                modeTrans.classList.remove("active-transparent");
+            } else {
+                modeTrans.classList.add("active-transparent");
+                modeOpaque.classList.remove("active-opaque");
+            }
+        }
+
+        function handleCanvasClick(e, forceType) {
+            if (!currentPortrait) return;
+            
+            const rect = imgOriginal.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            // Convert to original image coordinates
+            const origX = Math.round((clickX / rect.width) * originalImgWidth);
+            const origY = Math.round((clickY / rect.height) * originalImgHeight);
+            
+            // Determine type (use right click forceType or selected mode)
+            const type = (e.type === "contextmenu") ? "transparent" : currentMode;
+            
+            seeds.push({ x: origX, y: origY, type });
+            renderSeeds();
+            drawSeeds();
+        }
+
+        function drawSeeds() {
+            ctxOverlay.clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
+            
+            const rect = imgOriginal.getBoundingClientRect();
+            seeds.forEach((seed, index) => {
+                const canvasX = (seed.x / originalImgWidth) * rect.width;
+                const canvasY = (seed.y / originalImgHeight) * rect.height;
+                
+                ctxOverlay.beginPath();
+                ctxOverlay.arc(canvasX, canvasY, 6, 0, 2 * Math.PI);
+                ctxOverlay.fillStyle = seed.type === "opaque" ? "#10b981" : "#ef4444";
+                ctxOverlay.fill();
+                
+                ctxOverlay.lineWidth = 2;
+                ctxOverlay.strokeStyle = "#ffffff";
+                ctxOverlay.stroke();
+                
+                // Draw index number
+                ctxOverlay.fillStyle = "#ffffff";
+                ctxOverlay.font = "bold 9px sans-serif";
+                ctxOverlay.textAlign = "center";
+                ctxOverlay.textBaseline = "middle";
+                ctxOverlay.fillText(index + 1, canvasX, canvasY);
+            });
+        }
+
+        function renderSeeds() {
+            seedsList.innerHTML = "";
+            seeds.forEach((seed, index) => {
+                const item = document.createElement("div");
+                item.className = "seed-item";
+                
+                const label = document.createElement("span");
+                label.textContent = `#${index + 1}: (${seed.x}, ${seed.y})`;
+                
+                const badge = document.createElement("span");
+                badge.className = `seed-badge ${seed.type}`;
+                
+                const removeBtn = document.createElement("span");
+                removeBtn.className = "remove-seed";
+                removeBtn.innerHTML = "&times;";
+                removeBtn.addEventListener("click", () => removeSeed(index));
+                
+                const rightSide = document.createElement("div");
+                rightSide.style.display = "flex";
+                rightSide.style.display = "flex";
+                rightSide.style.alignItems = "center";
+                rightSide.style.gap = "0.75rem";
+                rightSide.appendChild(badge);
+                rightSide.appendChild(removeBtn);
+                
+                item.appendChild(label);
+                item.appendChild(rightSide);
+                seedsList.appendChild(item);
+            });
+        }
+
+        function removeSeed(index) {
+            seeds.splice(index, 1);
+            renderSeeds();
+            drawSeeds();
+        }
+
+        function clearAllSeeds() {
+            seeds = [];
+            renderSeeds();
+            drawSeeds();
+        }
+
+        async function processPreview() {
+            if (!currentPortrait) return;
+            showLoading("Generating updated preview...");
+            
+            try {
+                const res = await fetch("/api/process", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: currentPortrait,
+                        seeds: seeds
+                    })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    imgOriginal.src = `data:image/png;base64,${data.highres_b64}`;
+                    imgPreview.src = `data:image/png;base64,${data.image_b64}`;
+                } else {
+                    showError(data.error || "Failed to process preview.");
+                }
+            } catch (err) {
+                showError("Connection error while processing preview.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function saveAndApply() {
+            if (!currentPortrait) return;
+            showLoading("Applying changes and running ComfyUI pixelation workflow...");
+            
+            try {
+                const res = await fetch("/api/save", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: currentPortrait,
+                        seeds: seeds
+                    })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    showSuccess("Successfully saved and applied the new pixelated portrait!");
+                    imgPreview.src = `/api/processed?name=${currentPortrait}&t=${Date.now()}`;
+                } else {
+                    showError(data.error || "Failed to save portrait.");
+                }
+            } catch (err) {
+                showError("Connection error while saving portrait.");
+            } finally {
+                hideLoading();
+            }
+        }
+    </script>
+</body>
+</html>

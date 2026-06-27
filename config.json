@@ -1,0 +1,7 @@
+{
+    "port": 8000,
+    "comfyui_url": "http://127.0.0.1:8188",
+    "comfyui_input_dir": "C:\\Users\\nanbu\\AppData\\Local\\Comfy-Desktop\\ComfyUI-Shared\\input",
+    "comfyui_output_dir": "C:\\Users\\nanbu\\AppData\\Local\\Comfy-Desktop\\ComfyUI-Shared\\output",
+    "portrait_dir": "E:\\work\\new_game\\src\\test-game\\assets\\portraits"
+}
