@@ -1,0 +1,6 @@
+# Python bytecode and local environments
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
